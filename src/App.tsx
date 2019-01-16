@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import './App.css'
-
-const API = 'http://10.0.57:8383'
-
+const API = process.env.REACT_APP_API
 export function App() {
   const [entries, setEntries] = useState([])
   const [user, setUser] = useState(null)
