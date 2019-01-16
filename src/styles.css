@@ -3,7 +3,8 @@ body {
   padding: 0;
   font-family: "Poppins", sans-serif;
   font-weight: 500;
-  background-image: radial-gradient(circle at 50% 50%, #e1f4ffde, #0134bc);
+  background-image: linear-gradient(#12c2e9, #c471ed, #f64f59 );
+  background-repeat: no-repeat;
   min-height: 100vh;
   font-size: 16px;
   color: #fff;

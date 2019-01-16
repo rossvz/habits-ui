@@ -1,23 +1,66 @@
 .container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
 }
 
 .app {
-    text-align: center;
-    padding: 32px;
-    border-radius: 8px;
-    box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.5);
-    background-color: #444444;
-    min-width: 600px;
+  text-align: center;
+  padding: 32px;
+  border-radius: 8px;
+  box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.5);
+  background-color: #444444;
 }
 
 .separator {
-    margin: 16px 0;
-    height: 4px;
-    border-radius: 2px;
-    width: 100%;
-    background-color: #f353d0;
+  margin: 16px 0;
+  height: 4px;
+  border-radius: 2px;
+  width: 100%;
+  background-color: #f353d0;
+}
+
+.new-habit-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.input {
+  width: 100%;
+  margin: 2% 0;
+  font-size: 1.2em;
+  padding: 1%;
+}
+
+.habit {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 10vh;
+  flex-direction: column;
+}
+
+.habit-actions {
+  flex-direction: column;
+}
+
+.completed {
+  background-color: #12c2e9;
+  border-radius: 8px;
+}
+.pending {
+  border: 2px solid #f64f59;
+  border-radius: 8px;
+}
+
+.footer {
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+  margin-top: 5%;
 }

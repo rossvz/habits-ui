@@ -2,57 +2,66 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import './App.css'
 
-const API = 'http://localhost:8383'
+const API = 'http://10.0.57:8383'
 
-const useEntries = id => {
+export function App() {
   const [entries, setEntries] = useState([])
-  // @ts-ignore
-  useEffect(
-    ()=> {
-      if(id) {
-        axios.get(`${API}/entries/today?userId=${id}`).then(({data})=> {
-          setEntries(data)
-        })
-      }
-    },[id])
-  return entries
-}
-
-
-export function App () {
   const [user, setUser] = useState(null)
+  const [signedUp, setSignedUp] = useState(true)
   const [email, setEmail] = useState('')
+  const [newUserName, setNewUserName] = useState('')
   const [habits, setHabits] = useState([])
+  const [showNewHabit, setShowNewHabit] = useState(false)
   const [newHabit, setNewHabit] = useState('')
   const [newHabitCategory, setNewHabitCategory] = useState('')
-  const entries = useEntries(user && user.id)
+  const [completedHabits, setCompletedHabits] = useState([])
 
+  useEffect(
+    () => {
+      setCompletedHabits(
+        Array.from(new Set(entries.map(entry => entry.habit.id)))
+      )
+    },
+    [entries]
+  )
 
-  useEffect( () => {
-    if (!user) {
-      const id = localStorage.getItem('userId')
-      if (id){
-         axios.get(`${API}/users/${id}`).then(({data}) => {
-           setUser(data)
-           setHabits(data.habits)
-         })
-
+  useEffect(
+    () => {
+      if (user) {
+        localStorage.setItem('userId', user.id)
       }
-    }
-    return
-  },[user])
+      if (!user) {
+        const id = localStorage.getItem('userId')
+        if (id) {
+          axios.get(`${API}/users/${id}`).then(({ data }) => {
+            setUser(data)
+            setHabits(data.habits)
+            axios.get(`${API}/entries/today?userId=${id}`).then(({ data }) => {
+              setEntries(data)
+            })
+          })
+        }
+      }
+      return
+    },
+    [user]
+  )
 
   const fetchOrCreateUser = async (e: any) => {
     e.preventDefault()
-    const { data } = await axios.get(`${API}/users?email=${email}`)
-    if (data && data[0]) {
-      setUser(data[0])
-      setHabits(data[0].habits)
-      localStorage.setItem('userId',data[0].id)
+    try {
+      const { data } = await axios.get(`${API}/users?email=${email}`)
+      if (data && data[0]) {
+        setUser(data[0])
+        setHabits(data[0].habits)
+        localStorage.setItem('userId', data[0].id)
+      }
+    } catch (e) {
+      setSignedUp(false)
     }
   }
 
-  const handleNewHabit = async (e) => {
+  const handleNewHabit = async e => {
     e.preventDefault()
     const habit = {
       name: newHabit,
@@ -60,27 +69,56 @@ export function App () {
       weight: 1,
       user: user.id
     }
-    await axios.post(`${API}/habits`, habit )
-    setHabits([...habits, habit ])
+    await axios.post(`${API}/habits`, habit)
+    setHabits([...habits, habit])
     setNewHabit('')
     setNewHabitCategory('')
+    setShowNewHabit(false)
   }
 
-  const removeHabit = async (id) => {
-    await axios.delete(`${API}/habits/${id}`)
-    setHabits(habits.filter(h => h.id !== id))
+  const handleNewUser = async e => {
+    e.preventDefault()
+    const user = {
+      name: newUserName,
+      email,
+      habits: []
+    }
+    const { data } = await axios.post(`${API}/users`, user)
+    setUser(data)
   }
 
-  const completeHabit = async(id)=> {
-    await axios.post(`${API}/entries`,{
-      habit: id
-    })
+  // const removeHabit = async (id) => {
+  //   await axios.delete(`${API}/habits/${id}`)
+  //   setHabits(habits.filter(h => h.id !== id))
+  // }
+
+  const toggleHabitComplete = async habitId => {
+    if (completedHabits.includes(habitId)) {
+      entries
+        .filter(entry => entry.habit.id === habitId)
+        .forEach(async entry => {
+          setEntries(entries.filter(e => e.id !== entry.id))
+          await axios.delete(`${API}/entries/${entry.id}`)
+        })
+    } else {
+      const { data } = await axios.post(`${API}/entries`, {
+        habit: habitId
+      })
+      setEntries([...entries, data])
+    }
+  }
+
+  const logout = () => {
+    localStorage.clear()
+    setUser(null)
+    setSignedUp(true)
+    setEmail('')
   }
 
   return (
     <div className="container">
-      <div className='app'>
-        {!user && (
+      <div className="app">
+        {!user && signedUp && (
           <form onSubmit={fetchOrCreateUser}>
             <p>Enter your email address to log in:</p>
             <input
@@ -89,26 +127,76 @@ export function App () {
               value={email}
               onChange={e => setEmail(e.target.value)}
             />
+            <div className={'separator'} />
             <button type={'submit'}>Go</button>
           </form>
         )}
-        {user && <div>
-          Welcome {user.name}
-          <h1>Habits:</h1>
-          {habits.map(habit => <div key={habit.id}>
-            <button onClick={()=> removeHabit(habit.id)}>X</button>
-            <span>{habit.name}</span>
-            <button onClick={()=> completeHabit(habit.id) }>DONE</button>
-          </div>)}
-          <h2>{entries.length} point(s) earned today</h2>
-          <form onSubmit={handleNewHabit}>
-            <input type="text" value={newHabit} onChange={(e)=> setNewHabit(e.target.value)} placeholder={'New Habit'} />
-            <input type="text" value={newHabitCategory} onChange={(e)=> setNewHabitCategory(e.target.value)} placeholder={'Category'} />
-            <button type='submit'>+</button>
-          </form>
-        </div>}
-      </div>
 
+        {!user && !signedUp && (
+          <div>
+            <form onSubmit={handleNewUser}>
+              <input
+                className={'input'}
+                type="text"
+                value={newUserName}
+                placeholder={'Your Name'}
+                onChange={e => setNewUserName(e.target.value)}
+              />
+              <input
+                className={'input'}
+                type="text"
+                value={email}
+                placeholder={'Email'}
+                onChange={e => setEmail(e.target.value)}
+              />
+              <button type="submit">Sign Up</button>
+            </form>
+          </div>
+        )}
+
+        {user && (
+          <div>
+            <h1>Habits</h1>
+            <h2>{completedHabits.length} point(s) earned today</h2>
+            {habits.map(habit => (
+              <div
+                key={habit.id}
+                className={`habit ${
+                  completedHabits.includes(habit.id) ? 'completed' : 'pending'
+                }`}
+                onClick={() => toggleHabitComplete(habit.id)}
+              >
+                <h3>{habit.name}</h3>
+              </div>
+            ))}
+            {!showNewHabit && (
+              <div className={'footer'}>
+                <span onClick={logout}>Logout</span>
+                <button onClick={() => setShowNewHabit(true)}>Add Habit</button>
+              </div>
+            )}
+            {showNewHabit && (
+              <form className={'new-habit-form'} onSubmit={handleNewHabit}>
+                <input
+                  className={'input'}
+                  type="text"
+                  value={newHabit}
+                  onChange={e => setNewHabit(e.target.value)}
+                  placeholder={'New Habit'}
+                />
+                <input
+                  className={'input'}
+                  type="text"
+                  value={newHabitCategory}
+                  onChange={e => setNewHabitCategory(e.target.value)}
+                  placeholder={'Category'}
+                />
+                <button type="submit">Add Habit</button>
+              </form>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
