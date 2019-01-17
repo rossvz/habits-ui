@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
+import moment from 'moment'
 import './App.css'
 const API = process.env.REACT_APP_API
 export function App() {
@@ -35,7 +36,11 @@ export function App() {
             setUser(data)
             setHabits(data.habits)
             axios.get(`${API}/entries/today?userId=${id}`).then(({ data }) => {
-              setEntries(data)
+              const today = moment().startOf('day')
+              const todaysEntries = data.filter(d =>
+                moment(d.created).isAfter(today)
+              )
+              setEntries(todaysEntries)
             })
           })
         }
@@ -53,6 +58,7 @@ export function App() {
         setUser(data[0])
         setHabits(data[0].habits)
         localStorage.setItem('userId', data[0].id)
+        window.scrollTo(0, 0)
       }
     } catch (e) {
       setSignedUp(false)
@@ -120,6 +126,7 @@ export function App() {
           <form onSubmit={fetchOrCreateUser}>
             <p>Enter your email address to log in:</p>
             <input
+              className={'input'}
               placeholder={'Email address'}
               type="text"
               value={email}
@@ -156,17 +163,19 @@ export function App() {
           <div>
             <h1>Habits</h1>
             <h2>{completedHabits.length} point(s) earned today</h2>
-            {habits.map(habit => (
-              <div
-                key={habit.id}
-                className={`habit ${
-                  completedHabits.includes(habit.id) ? 'completed' : 'pending'
-                }`}
-                onClick={() => toggleHabitComplete(habit.id)}
-              >
-                <h3>{habit.name}</h3>
-              </div>
-            ))}
+            <div className="habits-container">
+              {habits.map(habit => (
+                <div
+                  key={habit.id}
+                  className={`habit ${
+                    completedHabits.includes(habit.id) ? 'completed' : 'pending'
+                  }`}
+                  onClick={() => toggleHabitComplete(habit.id)}
+                >
+                  <h3>{habit.name}</h3>
+                </div>
+              ))}
+            </div>
             {!showNewHabit && (
               <div className={'footer'}>
                 <span onClick={logout}>Logout</span>
