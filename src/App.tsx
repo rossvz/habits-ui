@@ -179,7 +179,7 @@ export function App() {
             {!showNewHabit && (
               <div className={'footer'}>
                 <span onClick={logout}>Logout</span>
-                <button onClick={() => setShowNewHabit(true)}>Add Habit</button>
+                <button onClick={() => setShowNewHabit(true)}>+</button>
               </div>
             )}
             {showNewHabit && (
@@ -198,7 +198,16 @@ export function App() {
                   onChange={e => setNewHabitCategory(e.target.value)}
                   placeholder={'Category'}
                 />
-                <button type="submit">Add Habit</button>
+                <div className={'new-habit-buttons'}>
+                  <button
+                    className={'cancel'}
+                    onClick={() => setShowNewHabit(false)}
+                    type={'button'}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit">Create</button>
+                </div>
               </form>
             )}
           </div>
