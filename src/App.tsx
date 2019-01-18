@@ -3,6 +3,18 @@ import axios from 'axios'
 import moment from 'moment'
 import './App.css'
 const API = process.env.REACT_APP_API
+
+function getUserEntries(
+  id,
+  setEntries: React.Dispatch<React.SetStateAction<any[]>>
+) {
+  axios.get(`${API}/entries/today?userId=${id}`).then(({ data }) => {
+    const today = moment().startOf('day')
+    const todaysEntries = data.filter(d => moment(d.created).isAfter(today))
+    setEntries(todaysEntries)
+  })
+}
+
 export function App() {
   const [entries, setEntries] = useState([])
   const [user, setUser] = useState(null)
@@ -43,19 +55,13 @@ export function App() {
       if (user) {
         localStorage.setItem('userId', user.id)
       }
-      if (!user || !entries.length) {
+      if (!user) {
         const id = localStorage.getItem('userId')
         if (id) {
           axios.get(`${API}/users/${id}`).then(({ data }) => {
             setUser(data)
             setHabits(data.habits)
-            axios.get(`${API}/entries/today?userId=${id}`).then(({ data }) => {
-              const today = moment().startOf('day')
-              const todaysEntries = data.filter(d =>
-                moment(d.created).isAfter(today)
-              )
-              setEntries(todaysEntries)
-            })
+            getUserEntries(id, setEntries)
           })
         }
       }
@@ -68,10 +74,12 @@ export function App() {
     e.preventDefault()
     try {
       const { data } = await axios.get(`${API}/users?email=${email}`)
-      if (data && data[0]) {
-        setUser(data[0])
-        setHabits(data[0].habits)
-        localStorage.setItem('userId', data[0].id)
+      if (data && data.length) {
+        const user = data[0]
+        setUser(user)
+        setHabits(user.habits)
+        localStorage.setItem('userId', user.id)
+        getUserEntries(user.id, setEntries)
         window.scrollTo(0, 0)
       }
     } catch (e) {
