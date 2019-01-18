@@ -43,7 +43,7 @@ export function App() {
       if (user) {
         localStorage.setItem('userId', user.id)
       }
-      if (!user) {
+      if (!user || !entries.length) {
         const id = localStorage.getItem('userId')
         if (id) {
           axios.get(`${API}/users/${id}`).then(({ data }) => {
