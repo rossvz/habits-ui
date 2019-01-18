@@ -14,6 +14,20 @@ export function App() {
   const [newHabit, setNewHabit] = useState('')
   const [newHabitCategory, setNewHabitCategory] = useState('')
   const [completedHabits, setCompletedHabits] = useState([])
+  const [connectivity, setConnectivity] = useState(null)
+
+  useEffect(() => {
+    if (!connectivity) {
+      axios
+        .get(`${API}/ping`)
+        .then(() => {
+          setConnectivity(true)
+        })
+        .catch(() => {
+          setConnectivity(false)
+        })
+    }
+  }, [])
 
   useEffect(
     () => {
@@ -119,6 +133,13 @@ export function App() {
     setEmail('')
   }
 
+  if (!connectivity)
+    return (
+      <div className={'container'}>
+        <div>Loading...</div>
+      </div>
+    )
+
   return (
     <div className="container">
       <div className="app">
@@ -139,6 +160,7 @@ export function App() {
 
         {!user && !signedUp && (
           <div>
+            It doesn't look like you have an account! Create one now!
             <form onSubmit={handleNewUser}>
               <input
                 className={'input'}
